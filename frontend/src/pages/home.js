@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import axios from "axios";
 import { useState } from "react";
-import { clearUser } from "../store/store";
+import { clearUser } from "../store/authSlice";
 
 export default function Home(){
 

@@ -56,7 +56,6 @@ public class SecurityConfig {
                 .csrf(CsrfConfigurer::disable) // JWT를 사용하기 떄문에 csrf토큰 없어도 됨
                 .httpBasic(HttpBasicConfigurer::disable)// JWT를 사용하기 때문에 꺼둠
                 .formLogin(FormLoginConfigurer::disable)// JWT를 사용하기 때문에 꺼둠
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement(sessionManagement ->
                     sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -70,9 +69,11 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/mypage/**").hasRole("USER")
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/mypage/**").hasAnyRole("USER", "ADMIN")
                         .anyRequest().authenticated()
+
+                        /*.requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .anyRequest().authenticated()*/
                 )
                 .headers(headers -> headers
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
@@ -86,17 +87,7 @@ public class SecurityConfig {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowCredentials(true);
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
+
 
 }
 /**

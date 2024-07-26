@@ -219,6 +219,11 @@ public class JwtTokenProvider implements InitializingBean {
             return false;
         }
     }
+/*    // 토큰에서 유저이메일 추출
+    public String getUserIdFromToken(String token) {
+        Claims claims = getClaims(token);
+        return claims.get(EMAIL_KEY).toString();
+    }*/
 
 }
 
