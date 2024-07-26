@@ -1,12 +1,15 @@
 package com.jsp.jpa.controller;
 
 import com.jsp.jpa.dto.AuthDto;
+import com.jsp.jpa.dto.UserDto;
 import com.jsp.jpa.service.AuthServiceImpl;
 import com.jsp.jpa.service.UserServiceImpl;
+import com.jsp.jpa.vo.UserDetailsImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -144,4 +147,21 @@ public class AuthApiController {
                 .header(HttpHeaders.SET_COOKIE, responseCookie.toString())
                 .build();
     }
+    /**
+
+    /**
+     * 사용자 정보 조회
+     * @param requestAccessToken
+     * @return 사용자 정보
+     */
+    @GetMapping("/userinfo")
+    public ResponseEntity<?> getUserInfo(@RequestHeader("Authorization") String requestAccessToken) {
+        String token = requestAccessToken.replace("Bearer ", "").trim();
+        UserDto userInfo = authService.getUserInfo(token);
+        if (!authService.isValidUser(token, userInfo.getEmail())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(userInfo);
+    }
+
 }

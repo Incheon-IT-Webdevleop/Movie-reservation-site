@@ -2,7 +2,7 @@ import { useState } from "react";
 import axios from 'axios';
 import { useDispatch } from "react-redux";
 import { useNavigate } from 'react-router-dom';
-import { setUser } from "../../store/store";
+import { setUser } from "../../store/authSlice";
 
 export default  function Login(){
 
@@ -15,31 +15,31 @@ export default  function Login(){
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const submitHandler = async (e)=>{
+    const submitHandler = async (e) => {
         e.preventDefault();
         setError("");
-
-
-        try{
-            const res = await axios.post('/api/auth/login', {email, password}
-                ,{headers:{
-                    'Content-Type': 'application/json',
-                },
-                withCredentials:true,
-        });
-            console.log("res : " + res);
-            // dispatch를 통해 store의 setUser함수를 사용한다.
-            // setUser함수를 사용해서 로그인 성공 시 이메일과 엑세스토큰을 넣어준다.
-            const accessToken = res.headers['authorization'].split(' ')[1];
-            localStorage.setItem('accessToken', accessToken);
-
-            dispatch(setUser({ user: res.data.user, token: accessToken }));
-            navigate('/home');
-        }catch(e){
-            setError('Login failed. Please check your credentials.');
-            console.error('Login error:', e);
+      
+        try {
+          const res = await axios.post('/api/auth/login', {email, password}, {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            withCredentials: true,
+          });
+      
+          const accessToken = res.headers['authorization'].split(' ')[1];
+          console.log("Access Token:", accessToken); // 토큰이 제대로 추출되는지 확인
+      
+          localStorage.setItem('accessToken', accessToken);
+          dispatch(setUser({ user: res.data.user, token: accessToken }));
+          console.log("Dispatched setUser action"); // 디버깅용
+          
+          navigate('/api/mypage/info');
+        } catch (e) {
+          setError('Login failed. Please check your credentials.');
+          console.error('Login error:', e);
         }
-    }
+      }
 
     return(
         <div>

@@ -2,6 +2,10 @@ package com.jsp.jpa.service;
 
 import com.jsp.jpa.common.JwtTokenProvider;
 import com.jsp.jpa.dto.AuthDto;
+import com.jsp.jpa.dto.UserDto;
+import com.jsp.jpa.model.User;
+import com.jsp.jpa.repository.UserRepository;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -9,6 +13,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +28,7 @@ public class AuthServiceImpl implements AuthService{
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final RedisService redisService;
+    private final UserRepository userRepository;
 
     private final String SERVER = "Server";
     /**
@@ -192,10 +198,29 @@ public class AuthServiceImpl implements AuthService{
                 "logout",
                 expiration);
     }
+    @Transactional
+    @Override
+    public UserDto getUserInfo(String token) {
+        Claims claims = jwtTokenProvider.getClaims(token);
+        String email = claims.get("email", String.class);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+        return new UserDto(user.getEmail(), user.getRole().getKey());
+    }
+
+    @Transactional
+    @Override
+    public boolean isValidUser(String token, String email) {
+        Claims claims = jwtTokenProvider.getClaims(token);
+        String tokenEmail = claims.get("email", String.class);
+        return tokenEmail.equals(email);
+    }
+
 }
 
 /**
- * Refresth Token(이하 RT)과 Access Token(이하 AT)를 다루기 위해 생성한 Service단 클래스이다. 코드를 이렇게 작성한 이유와 주석 외의 추가 설명이 필요하다고 생각되는 부분을 적어보겠다.
+ * Refresth Token(이하 RT)과 Access Token(이하 AT)를 다루기 위해 생성한 Service단 클래스이다.
+ * 코드를 이렇게 작성한 이유와 주석 외의 추가 설명이 필요하다고 생각되는 부분을 적어보겠다.
  *
  * 큰 틀은 이렇게 된다.
  *

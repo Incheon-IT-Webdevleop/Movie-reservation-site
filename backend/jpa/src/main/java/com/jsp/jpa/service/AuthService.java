@@ -1,6 +1,7 @@
 package com.jsp.jpa.service;
 
 import com.jsp.jpa.dto.AuthDto;
+import com.jsp.jpa.dto.UserDto;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -83,6 +84,11 @@ public interface AuthService {
     //
 
     /**
-     *
+     * 유저정보 조회
+     * @param token
      */
+    @Transactional
+    UserDto getUserInfo(String token);
+
+    boolean isValidUser(String token, String email);
 }
