@@ -27,11 +27,11 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public UserDto getUserInfo(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+    public UserDto getUserInfo(String id) {
+        User user = userRepository.findByUserID(id)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + id));
 
-        return new UserDto(user.getEmail(), user.getRole().name());
+        return new UserDto(user.getUserIDX(), user.getRole());
     }
 
 

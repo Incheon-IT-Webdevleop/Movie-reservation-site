@@ -7,30 +7,31 @@ import Signup from './pages/user/signup';
 import Home from './pages/home';
 
 import PrivateRoute from './component/privateRoute';
-import { initializeUser } from './store/authSlice';
+import { clearUser, initializeUser } from './store/authSlice';
 import MyPage from './pages/user/mypage';
 import axios from 'axios';
+import { validateToken } from './api/auth';
 
 
 function App() {
 
   const dispatch = useDispatch();
 
-  // 새로고침 했을 때 로컬스토리지에 있는 accessToken으로 유저를 세팅해주기위해
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      // 그럼 이게 mypage가 아니라 유저정보를 가져올 수 있는 걸 새로 만들어야한다. 컨트롤러에
-      axios.get('/api/auth/userinfo', {
-        headers: {
-          'Authorization': `Bearer ${token}`
+    const initializeAuth = async () => {
+      const token = localStorage.getItem('accessToken');
+      console.log("로컬 토큰 :  " + token);
+      if (token) {
+        const { isValid, user } = await validateToken(token);
+        if (isValid) {
+          dispatch(initializeUser({ user, token }));
+        } else {
+          dispatch(clearUser());
         }
-      }).then(response => {
-        dispatch(initializeUser({ user: response.data.user, token }));
-      }).catch(error => {
-        console.error('Failed to fetch user info on load:', error);
-      });
-    }
+      }
+    };
+
+    initializeAuth();
   }, [dispatch]);
 
   return (

@@ -8,7 +8,11 @@ export const validateToken = async (token) => {
         'Authorization': `Bearer ${token}`
       }
     });
-    return response.status === 200;
+    if (response.status === 200) {
+      const user = response.data.user;
+      return { isValid: true, user };
+    }
+    return { isValid: false, user: null };
   } catch (error) {
     console.error('Token validation error:', error);
     return await reissueToken(token);
@@ -27,12 +31,12 @@ const reissueToken = async (expiredToken) => {
     if (response.status === 200) {
       const newAccessToken = response.headers['authorization'].split(' ')[1];
       localStorage.setItem('accessToken', newAccessToken);
-      return true;
+      return { isValid: true, user: response.data.user };
     } else {
-      return false;
+      return { isValid: false, user: null };
     }
   } catch (error) {
     console.error('Token reissue error:', error);
-    return false;
+    return { isValid: false, user: null };
   }
 };

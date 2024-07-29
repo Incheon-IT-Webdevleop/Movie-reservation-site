@@ -24,6 +24,8 @@ public interface AuthService {
      */
     public boolean validate(String requestAccessTokenInHeader);
 
+
+
     /**
      * 토큰 재발급: validate 메서드가 true 반환할 때만 사용 -> AT, RT 재발급
      * @param requestAccessTokenInHeader
@@ -41,7 +43,7 @@ public interface AuthService {
      * @param authorities
      * @return
      */
-    public AuthDto.TokenDto generateToken(String provider, String email, String authorities);
+    public AuthDto.TokenDto generateToken(int idx, String provider, String email, String authorities, String id);
 
     /**
      * RT를 Redis에 저장
@@ -90,5 +92,5 @@ public interface AuthService {
     @Transactional
     UserDto getUserInfo(String token);
 
-    boolean isValidUser(String token, String email);
+    boolean isValidUser(String token, int idx);
 }

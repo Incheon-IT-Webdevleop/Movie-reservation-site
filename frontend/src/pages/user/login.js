@@ -2,12 +2,12 @@ import { useState } from "react";
 import axios from 'axios';
 import { useDispatch } from "react-redux";
 import { useNavigate } from 'react-router-dom';
-import { setUser } from "../../store/authSlice";
+import { initializeUser, setUser } from "../../store/authSlice";
 
 export default  function Login(){
 
     // 입력값들을 저장하기 위해 useState사용
-    const [email, setEmail] = useState("");
+    const [id, setId] = useState("");
     const [password, setPassword] = useState("");
     // 서버나 유효성검사 결과 문제가 있을 때 에러문을 넣어주기 위한 값
     const [error, setError] = useState("");
@@ -20,7 +20,7 @@ export default  function Login(){
         setError("");
       
         try {
-          const res = await axios.post('/api/auth/login', {email, password}, {
+          const res = await axios.post('/api/auth/login', {id, password}, {
             headers: {
               'Content-Type': 'application/json',
             },
@@ -28,11 +28,14 @@ export default  function Login(){
           });
       
           const accessToken = res.headers['authorization'].split(' ')[1];
-          console.log("Access Token:", accessToken); // 토큰이 제대로 추출되는지 확인
-      
+          //console.log("Access Token:", accessToken); // 토큰이 제대로 추출되는지 확인
           localStorage.setItem('accessToken', accessToken);
-          dispatch(setUser({ user: res.data.user, token: accessToken }));
-          console.log("Dispatched setUser action"); // 디버깅용
+          const user = res.data.user;
+
+          dispatch(setUser({ user, token: accessToken }));
+          dispatch(initializeUser({ user, token: accessToken }));
+          
+          //console.log("Dispatched setUser action"); // 디버깅용
           
           navigate('/api/mypage/info');
         } catch (e) {
@@ -45,11 +48,11 @@ export default  function Login(){
         <div>
             <form onSubmit={submitHandler}>
                 <input 
-                    type="email"
-                    name="email"
-                    placeholder="이메일"
-                    value={email}
-                    onChange={(e)=>setEmail(e.target.value)} />
+                    type="text"
+                    name="id"
+                    placeholder="아이디"
+                    value={id}
+                    onChange={(e)=>setId(e.target.value)} />
                 <input 
                     type="password"
                     name="password"

@@ -15,6 +15,7 @@ const MyPage = () => {
             'Authorization': `Bearer ${token}`
           }
         });
+        console.log("토큰으로 받아온 데이터 : " + response.data.idx);
         setUserInfo(response.data);
       } catch (error) {
         console.error('Failed to fetch user info:', error);
@@ -31,7 +32,7 @@ const MyPage = () => {
   return (
     <div>
       <h1>마이페이지</h1>
-      <p>이메일: {userInfo.email}</p>
+      <p>이메일: {userInfo.id}</p>
       {/* 기타 사용자 정보 표시 */}
     </div>
     

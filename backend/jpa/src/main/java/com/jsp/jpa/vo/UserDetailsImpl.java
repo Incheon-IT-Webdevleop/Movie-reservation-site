@@ -23,14 +23,17 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public String getUsername() {
-        return user.getEmail();
+        return user.getUserID();
     }
 
     @Override
     public String getPassword() {
-        return user.getPassword();
+        return user.getUserPW();
     }
 
+    public User getUser() {
+        return user;
+    }
 
     // == 세부 설정 == //
 

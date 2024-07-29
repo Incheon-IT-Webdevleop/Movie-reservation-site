@@ -5,6 +5,7 @@ import com.jsp.jpa.dto.AuthDto;
 import com.jsp.jpa.dto.UserDto;
 import com.jsp.jpa.model.User;
 import com.jsp.jpa.repository.UserRepository;
+import com.jsp.jpa.vo.UserDetailsImpl;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,13 +42,19 @@ public class AuthServiceImpl implements AuthService{
     @Override
     public AuthDto.TokenDto login(AuthDto.LoginDto loginDto) {
         // 유저 아이디와 비밀번호를 가져와서 인증토큰을 만든다
+        log.info("로그인 서비스");
         UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword());
+                new UsernamePasswordAuthenticationToken(loginDto.getId(), loginDto.getPassword());
+        log.info("로그인 정보 : " + loginDto.getId());
 
         Authentication authentication = authenticationManagerBuilder.getObject()
                 .authenticate(authenticationToken);
+
+        User user = userRepository.findByUserID(loginDto.getId())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + loginDto.getId()));
+
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        return generateToken(SERVER, authentication.getName(), getAuthorities(authentication));
+        return generateToken(user.getUserIDX(), SERVER, user.getUserEmail(), getAuthorities(authentication), user.getUserID());
     }
 
     /**
@@ -90,10 +97,12 @@ public class AuthServiceImpl implements AuthService{
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String authorities = getAuthorities(authentication);
+        int idx = getIdx(authentication);
+        String id = getId(authentication);
 
         // 토큰 재발급 및 Redis 업데이트
         redisService.deleteValues("RT(" + SERVER + "):" + principal); // 기존 RT 삭제
-        AuthDto.TokenDto tokenDto = jwtTokenProvider.createToken(principal, authorities);
+        AuthDto.TokenDto tokenDto = jwtTokenProvider.createToken(idx, authorities, id);
         saveRefreshToken(SERVER, principal, tokenDto.getRefreshToken());
         return tokenDto;
     }
@@ -109,14 +118,14 @@ public class AuthServiceImpl implements AuthService{
      */
     @Transactional
     @Override
-    public AuthDto.TokenDto generateToken(String provider, String email, String authorities) {
+    public AuthDto.TokenDto generateToken(int idx, String provider, String email, String authorities, String id) {
         // RT가 이미 있을 경우
         if(redisService.getValues("RT(" + provider + "):" + email) != null) {
             redisService.deleteValues("RT(" + provider + "):" + email); // 삭제
         }
 
         // AT, RT 생성 및 Redis에 RT 저장
-        AuthDto.TokenDto tokenDto = jwtTokenProvider.createToken(email, authorities);
+        AuthDto.TokenDto tokenDto = jwtTokenProvider.createToken(idx, authorities, id);
         saveRefreshToken(provider, email, tokenDto.getRefreshToken());
         return tokenDto;
     }
@@ -202,18 +211,29 @@ public class AuthServiceImpl implements AuthService{
     @Override
     public UserDto getUserInfo(String token) {
         Claims claims = jwtTokenProvider.getClaims(token);
-        String email = claims.get("email", String.class);
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
-        return new UserDto(user.getEmail(), user.getRole().getKey());
+        Long idx = claims.get("idx", Long.class);
+        User user = userRepository.findById(idx)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + idx));
+        return new UserDto(user.getUserIDX(), user.getRole());
     }
 
-    @Transactional
     @Override
-    public boolean isValidUser(String token, String email) {
+    public boolean isValidUser(String token, int idx){
         Claims claims = jwtTokenProvider.getClaims(token);
-        String tokenEmail = claims.get("email", String.class);
-        return tokenEmail.equals(email);
+        int tokenIdx = claims.get("idx", Integer.class);
+        return tokenIdx == idx;
+    }
+
+
+
+    private int getIdx(Authentication authentication) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        return userDetails.getUser().getUserIDX();
+    }
+
+    private String getId(Authentication authentication) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        return userDetails.getUser().getUserID(); // 사용자 ID를 추출합니다.
     }
 
 }

@@ -158,7 +158,7 @@ public class AuthApiController {
     public ResponseEntity<?> getUserInfo(@RequestHeader("Authorization") String requestAccessToken) {
         String token = requestAccessToken.replace("Bearer ", "").trim();
         UserDto userInfo = authService.getUserInfo(token);
-        if (!authService.isValidUser(token, userInfo.getEmail())) {
+        if (!authService.isValidUser(token, userInfo.getIdx())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         return ResponseEntity.ok(userInfo);

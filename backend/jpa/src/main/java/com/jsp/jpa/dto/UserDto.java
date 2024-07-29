@@ -1,14 +1,15 @@
 package com.jsp.jpa.dto;
 
+import com.jsp.jpa.common.Role;
 import lombok.Data;
 
 @Data
 public class UserDto {
-    private String email;
-    private String role;
+    private int idx;
+    private Role role;
 
-    public UserDto(String email, String role) {
-        this.email = email;
+    public UserDto(int idx, Role role) {
+        this.idx = idx;
         this.role = role;
     }
 
