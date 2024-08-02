@@ -23,11 +23,14 @@ function App() {
       console.log("로컬 토큰 :  " + token);
       if (token) {
         const { isValid, user } = await validateToken(token);
+        console.log("인증 여부 : " + isValid);
         if (isValid) {
           dispatch(initializeUser({ user, token }));
         } else {
           dispatch(clearUser());
         }
+      } else {
+        dispatch(clearUser());
       }
     };
 
@@ -43,6 +46,8 @@ function App() {
           <Route 
             path='/api/mypage/info' 
             element={
+              // PrivateRoute란 인증이 필요한, 즉 로그인을 했을 때
+              // 접근 가능하도록 세팅을 할 수 있다.
               <PrivateRoute>
                 <MyPage />
               </PrivateRoute>

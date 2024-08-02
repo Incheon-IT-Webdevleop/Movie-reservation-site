@@ -211,10 +211,10 @@ public class AuthServiceImpl implements AuthService{
     @Override
     public UserDto getUserInfo(String token) {
         Claims claims = jwtTokenProvider.getClaims(token);
-        Long idx = claims.get("idx", Long.class);
-        User user = userRepository.findById(idx)
+        int idx = claims.get("idx", Integer.class);
+        User user = userRepository.findByUserIDX(idx)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + idx));
-        return new UserDto(user.getUserIDX(), user.getRole());
+        return new UserDto(user.getUserIDX(), user.getRole(),user.getUserID());
     }
 
     @Override
